@@ -1,0 +1,48 @@
+{
+  "name": "dict-service",
+  "version": "1.0.0",
+  "description": "REST API service for managing aerospace project dictionaries, telemetry channels, commands, EVRs, and verification scripts. Built with Fastify and ArangoDB.",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "dev": "nodemon ./src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "url": "https://github.com/OpenIngenium/dict-service.git", 
+    "type": "git"
+  },
+  "keywords": [
+    "aerospace",
+    "telemetry",
+    "dictionary",
+    "api",
+    "fastify",
+    "arangodb",
+    "rest",
+    "commands",
+    "evr",
+    "verification",
+    "spacecraft"
+  ],
+  "author": "OpenIngenium",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/OpenIngenium/dict-service/issues"
+  },
+  "homepage": "https://github.com/OpenIngenium/dict-service#readme",
+  "dependencies": {
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "arangojs": "^8.8.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
