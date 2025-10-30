@@ -1,0 +1,3542 @@
+openapi: 3.0.0
+info:
+  version: 4.0.0
+  title: Dictionary Service
+  description: >
+    This document defines the API of the Project Configuration Service (PCS) of
+    Ingenium. 
+
+    The Ingenium PCS exists to provide Ingenium with a consistant, queryable 
+    interface to search for and get the definition of a variety of data
+    including cmd/tlm dictionary elements, V&V information and custom script
+    information.
+
+
+    The Ingenium UI will use the PCS to streamline the user experience for 
+    entering commands, EH&A (channelized telemetry), EVRs (log messages), 
+    1553 Variables, V&V information, and custom scripts.
+  contact:
+    name: Ingenium Support
+    email: ingenium-support@jpl.nasa.gov
+    url: https://wiki.jpl.nasa.gov/display/Ingenium/Dictionary+Service
+security:
+  - UserSecurity: []
+paths:
+  /dictionaries/{dictionary_type}/versions:
+    get:
+      summary: Get a list of available versions
+      description: |
+        Returns a list of versions of the dictionary.            
+      tags:
+        - Dictionary
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - name: state_filter
+          in: query
+          description: >-
+            Limits the query dictionary versions with the state (exact match).
+            Supports multiple filters with additional 'key=value' pairs.
+          schema:
+            type: string
+            enum:
+              - NOT_PUBLISHED
+              - PUBLISHED
+              - RETIRED
+              - RELEASED
+        - name: description_filter
+          in: query
+          description: >-
+            Limits the query dictionary versions with the description (partial
+            match)
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum:
+              - CREATION_DATE
+              - VERSION
+              - STATE
+      responses:
+        '200':
+          description: Success. a list of all the dictionaries.
+          headers:
+            x-total-count:
+              description: The total number of resources
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dictionary'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    post:
+      summary: Create a new dictionary
+      description: |
+        Creates a new dictionary version in the Ingenium Dictionary Service
+      tags:
+        - Dictionary
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                dictionary_description:
+                  description: Description of the dictionary version
+                  type: string
+                dictionary_version:
+                  description: Dictionary Version
+                  type: string
+                state:
+                  description: State of the dictionary version
+                  type: string
+                  enum:
+                    - NOT_PUBLISHED
+                    - PUBLISHED
+                    - RETIRED
+                    - RELEASED
+      responses:
+        '200':
+          description: Success. Dictionary Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dictionary_info:
+                    $ref: '#/components/schemas/Dictionary'
+        '400':
+          description: Bad input (Version Already Exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}:
+    get:
+      summary: Get details of a dictionary
+      description: |
+        Returns the details of the specified dictionary.
+      tags:
+        - Dictionary
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'
+        - $ref: '#/components/parameters/dictionary_version'
+      responses:
+        '200':
+          description: Success. a list of all the dictionaries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dictionary'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    delete:
+      summary: Deletes a dictionary
+      description: |
+        Deletes the specified dictionary.
+      tags:
+        - Dictionary
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'
+        - $ref: '#/components/parameters/dictionary_version'
+      responses:
+        '204':
+          description: Success. Dictionary Deleted.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: Updates Dictionary
+      description: >
+        Updates the content of a dictionary version in the Ingenium Dictionary
+        Service
+      tags:
+        - Dictionary
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'
+        - $ref: '#/components/parameters/dictionary_version'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                dictionary_description:
+                  description: Description of the version of the dictionaries
+                  type: string
+                state:
+                  description: State of the dictionary version
+                  type: string
+                  enum:
+                    - NOT_PUBLISHED
+                    - PUBLISHED
+                    - RETIRED
+                    - RELEASED
+      responses:
+        '200':
+          description: Success. Dictionary updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dictionary_info:
+                    $ref: '#/components/schemas/Dictionary'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/cmds:
+    post:
+      summary: create a command
+      description: |
+        Creates a command in the specified dictionary
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'      
+        - $ref: '#/components/parameters/dictionary_version'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Command'
+        required: true
+      responses:
+        '201':
+          description: Success. The command is created..
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Command'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'        
+    get:
+      summary: Get a list of commands
+      description: |
+        Returns a list of commands based on query parameters.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: command_stem
+          in: query
+          description: >-
+            Limits (partial match) the query on command stem (aka command
+            mneumonic)
+          schema:
+            type: string
+        - name: ops_cat
+          in: query
+          description: Limits (partial match) the result on the ops category
+          schema:
+            type: string
+        - name: command_description
+          in: query
+          description: Limits the query on command description (aka command mneumonic)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. a list of all the cmds.
+          headers:
+            x-total-count:
+              description: The total number of resources
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Command'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/cmds/bulk_query:
+    post:
+      summary: Queries commands based on a list of command stems
+      description: >
+        Queries commands based on command stems. Using POST instead of GET
+        since many stems may need to be sent.
+
+        Returns up to 10000 cmds.
+      tags:
+        - Dictionary Content
+        - Bulk Query
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: command stems
+        required: true
+      responses:
+        '200':
+          description: Success. a list of all the cmds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Command'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/cmds/{cmd_stem}:
+    get:
+      summary: Get details of a command
+      description: |
+        Returns a the details of the specified command
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/cmd_stem'
+        - name: repeat_args
+          in: query
+          description: >-
+            Returns just the repeated arguments (true) vs. the whole command
+            (false) - default.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Success. The command details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Command'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: update a command
+      description: |
+        Updates a command in the specified dictionary
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/cmd_stem'        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+        required: true
+      responses:
+        '200':
+          description: Success. The command is updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Command'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+    delete:
+      summary: Delete a command
+      description: |
+        Deletes the specified command from the dictionary version
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/cmd_stem'
+      responses:
+        '204':
+          description: Success. Deletion.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                
+
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/evrs:
+    post:
+      summary: Create an EVR
+      description: |
+        Creates an EVR
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/EVR'
+        required: true
+      responses:
+        '200':
+          description: Success. An evr.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EVR'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'           
+    get:
+      summary: Get a list of evrs
+      description: |
+        Returns a list of evrs based on query parameters.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: evr_id
+          in: query
+          description: Limits (partial match) the query on evr_id
+          schema:
+            type: string
+        - name: evr_name
+          in: query
+          description: Limits (partial match) the query on evr_name
+          schema:
+            type: string
+        - name: evr_level
+          in: query
+          description: Limits (partial match) the query on EVR Level
+          schema:
+            type: string
+        - name: ops_cat
+          in: query
+          description: Limits (partial match) the result on the ops category
+          schema:
+            type: string
+        - name: evr_description
+          in: query
+          description: Limits (partial match) the query on evr description
+          schema:
+            type: string
+        - name: evr_message
+          in: query
+          description: Limits (partial match) the query on evr message
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. a list of all the evrs.
+          headers:
+            x-total-count:
+              description: The total number of resources
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EVR'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/evrs/bulk_query:
+    post:
+      summary: Queries EVRS based on a list of EVR Names
+      description: >
+        Queries EVRS based on evr names. Using POST instead of GET
+        since many stems may need to be sent.
+
+        Returns up to 10000 evrs.
+      tags:
+        - Dictionary Content
+        - Bulk Query
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: evr names
+        required: true
+      responses:
+        '200':
+          description: Success. a list of all the cmds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EVR'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/evrs/{evr_name}:
+    get:
+      summary: Get details of a given evr
+      tags:
+        - Dictionary Content      
+      description: |
+        Returns the details of the EVR specified.
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/evr_name'
+      responses:
+        '200':
+          description: Success. An evr.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EVR'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: update an evr
+      description: |
+        Updates an evr in the specified dictionary
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'     
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/evr_name'     
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EVR'
+        required: true
+      responses:
+        '200':
+          description: Success. The evr is updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EVR'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+    delete:
+      summary: Delete an EVR
+      description: |
+        Deletes the specified command from the dictionary version
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/evr_name'
+      responses:
+        '204':
+          description: Success. Deletion.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                     
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/channels:
+    post:
+      summary: Create an Telemetry Channel
+      description: |
+        Creates an Telemetry Channel
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Channel'
+        required: true
+      responses:
+        '200':
+          description: Success. An Channel is created.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'         
+    get:
+      summary: Get a list of channels
+      description: |
+        Returns a list of channels based on query parameters.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'         
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: channel_name
+          in: query
+          description: Limits (partial match) the query on channel_name
+          schema:
+            type: string
+        - name: ops_cat
+          in: query
+          description: Limits (partial match) the result on the ops category
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Limits (partial match) the query on channel description
+          schema:
+            type: string
+        - name: derived
+          in: query
+          description: Limits the query on whether the channel is ground derived.
+          schema:
+            type: string
+            enum:
+              - 'Yes'
+              - 'No'
+        - name: channel_id
+          in: query
+          description: Limits (partial match) the query on channel id (i.e. THRM-3012)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. a list of all the channels.
+          headers:
+            x-total-count:
+              description: The total number of resources
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/channels/bulk_query:
+    post:
+      summary: Queries Channels based on a list of Channel Names
+      description: >
+        Queries Channels based on channel names. Using POST instead of GET
+        since many names may need to be sent.
+
+        Returns up to 10000 channels.
+      tags:
+        - Dictionary Content
+        - Bulk Query
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: channel names
+        required: true
+      responses:
+        '200':
+          description: Success. a list of all the channels.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                        
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/channels/{channel_name}:
+    get:
+      summary: Get details of a give channel
+      description: |
+        Returns the specifics of the Channel specified.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'         
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/channel_name'
+      responses:
+        '200':
+          description: Success. A Channel.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: update a channel
+      description: |
+        Updates a channel in the specified dictionary
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'     
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/channel_name'     
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Channel'
+        required: true
+      responses:
+        '200':
+          description: Success. The command details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+    delete:
+      summary: Delete an Channel
+      description: |
+        Deletes the specified channel from the dictionary version
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/channel_name'
+      responses:
+        '204':
+          description: Success. Deletion.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                     
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/mil1553:
+    post:
+      summary: Create a 1553 Variable
+      description: |
+        Creates a 1553 Variable
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Mil1553Details'
+        required: true
+      responses:
+        '200':
+          description: Success. An 1553 Variable is created.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mil1553Details'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'         
+      
+    get:
+      summary: Get a list of 1553 variables
+      description: |
+        Returns a list of 1553 channels based on query parameters.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'         
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: mil1553_name
+          in: query
+          description: Limits (partial match) the query on mil1553 variable name
+          schema:
+            type: string
+        - name: ops_cat
+          in: query
+          description: Limits (partial match) the result on the ops category
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Limits (partial match) the query on mil1553 variable description
+          schema:
+            type: string
+        - name: remote_terminal
+          in: query
+          description: Limits (partial match) the query on 1553 remote terminal number
+          schema:
+            type: integer
+        - name: sub_address
+          in: query
+          description: Limits (partial match) the query on the 1553 sub-address
+          schema:
+            type: integer
+        - name: transmit_receive
+          in: query
+          description: Limits the query on whether the variable is for transmit or receive
+          schema:
+            type: string
+            enum:
+              - TRANSMIT
+              - RECEIVE
+      responses:
+        '200':
+          description: Success. A list of mil1553 variables.
+          headers:
+            x-total-count:
+              description: The total number of resources
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mil1553Details'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/mil1553/bulk_query:
+    post:
+      summary: Queries mil1553 variables based on a list of mil Names
+      description: >
+        Queries Channels based on channel names. Using POST instead of GET
+        since many names may need to be sent.
+
+        Returns up to 10000 channels.
+      tags:
+        - Dictionary Content
+        - Bulk Query
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'          
+        - $ref: '#/components/parameters/dictionary_version'        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: mil1553 names
+        required: true
+      responses:
+        '200':
+          description: Success. a list of all the channels.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                      
+  /dictionaries/{dictionary_type}/versions/{dictionary_version}/mil1553/{mil1553_name}:
+    get:
+      summary: Get details of a given 1553 variable
+      description: |
+        Returns the specifics of the 1553 variable specified.
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'         
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/mil1553_name'
+      responses:
+        '200':
+          description: Success. 1553 details provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mil1553Details'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: update a mil1553 variable
+      description: |
+        Updates an mil1553 variable in the specified dictionary
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'     
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/mil1553_name'     
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mil1553Details'
+        required: true
+      responses:
+        '200':
+          description: Success. The mil1553 variable is updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mil1553Details'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+    delete:
+      summary: Delete an mil1553 variable
+      description: |
+        Deletes the specified mil1553 variable from the dictionary version
+      tags:
+        - Dictionary Content
+      parameters:
+        - $ref: '#/components/parameters/dictionary_type'           
+        - $ref: '#/components/parameters/dictionary_version'
+        - $ref: '#/components/parameters/mil1553_name'
+      responses:
+        '204':
+          description: Success. Deletion.
+        '401':
+          description: >-
+            Unauthorized (credentials provided, user doesn't have access to
+            resource)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'  
+                
+  /custom_scripts:
+    get:
+      summary: Get list of all scripts registered in Ingenium
+      description: |
+        Get list of all scripts registered in Ingenium
+      tags:
+        - Scripts
+      parameters:
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: script_path
+          in: query
+          description: Limits (partial match) the query on custom script path
+          schema:
+            type: string
+        - name: script_name
+          in: query
+          description: Limits (partial match) the query on custom script name
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Limits (partial match) the query on script description
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Limits (partial match) the query on script status
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - INACTIVE
+      responses:
+        '200':
+          description: Success. a list of all the custom scripts.
+          headers:
+            x-total-count:
+              description: The total number of scripts
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomScript'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    post:
+      summary: Create a definition of a custom script in Ingenium
+      description: |
+        Create a custom script definition
+      tags:
+        - Scripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomScript'
+        required: true    
+
+      responses:
+        '201':
+          description: Success. Custom Script Dictionary updated.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomScript'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /custom_scripts/bulk_query:
+    post:
+      summary: Queries custom scripts based on script ids
+      description: >
+        Queries custom scripts based on script ids. Using POST instead of GET
+        since many ids may need to be sent.
+
+        Returns up to 10000 scripts.
+      tags:
+        - Scripts
+        - Bulk Query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: script ids
+        required: true
+      responses:
+        '200':
+          description: Success. Custom Script Dictionary updated.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomScript'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /custom_scripts/{script_id}:
+    get:
+      summary: Gets details of a single script
+      description: |
+        Gets the details on a single custom script
+      tags:
+        - Scripts
+      parameters:
+        - $ref: '#/components/parameters/script_id'
+      responses:
+        '200':
+          description: Success. Details on specific script.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomScript'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: Update the status of a custom script in Ingenium
+      description: |
+        Update a custom script definition
+      tags:
+        - Scripts
+      parameters:
+        - $ref: '#/components/parameters/script_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomScript'
+        required: true    
+      responses:
+        '200':
+          description: Success. Custom Script Dictionary updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomScript'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    delete:
+      summary: Deletes a custom script in Ingenium
+      description: |
+        Deletes a custom script definition
+      tags:
+        - Scripts
+      parameters:
+        - $ref: '#/components/parameters/script_id'
+      responses:
+        '204':
+          description: Success. Script deleted.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /step_palette/built_in/:
+    get:
+      summary: Get a list of all built in steps contained in the step palette
+      description: |
+        Get a list of all built in steps contained in the step palette
+      tags:
+        - Palette
+      parameters:
+        - name: step_type
+          in: query
+          description: Limits (partial match) the query on step_type of built in steps in the palette
+          schema:
+            type: string
+        - name: display_name
+          in: query
+          description: Limits (partial match) the query on names of built in steps in the palette
+          schema:
+            type: string            
+        - name: enable_disable
+          in: query
+          description: Limits (partial match) the query on whether a step is enabled or disabled
+          schema:
+            type: string
+            enum:
+              - ENABLE
+              - DISABLE
+      responses:
+        '200':
+          description: Success. A list of all the built in steps in the palette.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaletteBuiltInStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'              
+  /step_palette/built_in/{step_type}:  
+    patch:
+      summary: Update a built in step in the step palette 
+      description: |
+        Update a built in step in the step palette
+      tags:
+        - Palette
+      parameters:
+        - $ref: '#/components/parameters/step_type'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaletteBuiltInStepPatch'
+        required: true    
+      responses:
+        '200':
+          description: Success. Step Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaletteBuiltInStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /step_palette/custom/:
+    get:
+      summary: Get a list of all custom steps contained in the step palette
+      description: |
+        Get a list of all steps contained in the step palette
+      tags:
+        - Palette
+      parameters:
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: display_name
+          in: query
+          description: Limits (partial match) the query on steps in the palette
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. A list of all the custom steps in the palette.
+          headers:
+            x-total-count:
+              description: The total number of steps
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaletteCustomStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    post:
+      summary: Add custom step(s) to the palette
+      description: |
+        Add custom step(s) to the palette
+      tags:
+        - Palette
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PaletteCustomStep'
+        required: true    
+      responses:
+        '201':
+          description: Success. Custom Scripts added to the palette.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaletteCustomStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /step_palette/custom/{step_id}:
+    get:
+      summary: Get a specific custom step in the step palette
+      description: |
+        Get a specific custom step in the step palette
+      tags:
+        - Palette
+      parameters:
+        - name: step_id
+          in: path
+          required: true
+          description: step id to be retreived 
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. The details of a specific step in the palette.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/PaletteCustomStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'    
+    
+    patch:
+      summary: Update a custom step in the palette
+      description: |
+        Update a custom step in the palette
+      tags:
+        - Palette
+      parameters:
+        - name: step_id
+          in: path
+          required: true
+          description: step id to be updated 
+          schema:
+            type: string        
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaletteCustomStepPatch'
+        required: true    
+
+      responses:
+        '200':
+          description: Success. Custom Script Dictionary updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaletteCustomStep'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    delete:
+      summary: Delete a custom step in the palette
+      description: |
+        Delete a custom step in the palette
+      tags:
+        - Palette
+      parameters:
+        - name: step_id
+          in: path
+          required: true
+          description: step id to be deleted
+          schema:
+            type: string        
+
+      responses:
+        '204':
+          description: Success. Step in step palette deleted.
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'  
+
+
+  /vnv/vis:
+    post:
+      summary: Create a definition of a VI in Ingenium
+      description: |
+        Create a definition of a Verification Item in Ingenium
+      tags:
+        - Verification and Validation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/VerificationItem'
+        required: true    
+
+      responses:
+        '201':
+          description: Success. VI Created.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationItem'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    get:
+      summary: Get list of all verification items
+      description: |
+        Get list of all verification items
+      tags:
+        - Verification and Validation
+      parameters:
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/wild'
+        - name: vi_id
+          in: query
+          description: Limits (partial match) the query on vi_id
+          schema:
+            type: string
+        - name: vi_name
+          in: query
+          description: Limits (partial match) the query on vi_name
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum:
+              - VI_ID
+              - VI_OWNER
+              - VI_NAME
+              - VI_TYPE
+              - VI_TEXT
+              - VA_NAME
+        - name: vi_owner
+          in: query
+          description: >
+            Limits (partial match) the query on verification item point of
+            contact
+          schema:
+            type: string
+        - name: va_name
+          in: query
+          description: >
+            Limits (partial match) the query on which verification activities
+            the vi is linked to
+          schema:
+            type: string
+        - name: vi_type
+          in: query
+          description: |
+            Limits (partial match) the query on the type of vi
+          schema:
+            type: string
+        - name: vi_text
+          in: query
+          description: |
+            Limits (partial match) the query on the vi's text
+          schema:
+            type: string
+        - name: va_poc
+          in: query
+          description: >-
+            Limits (partial match) the query on verification activity point of
+            contact
+          schema:
+            type: string
+        - name: vac_name
+          in: query
+          description: Limits (partial match) the query on the name of the vac
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success. a list of all verification activities
+          headers:
+            x-total-count:
+              description: The total number of scripts
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationItem'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /vnv/vis/{vi_id}:
+    get:
+      summary: Details for a given verification item
+      description: |
+        Details for a given verification item
+      tags:
+        - Verification and Validation
+      parameters:
+        - $ref: '#/components/parameters/vi_id'
+      responses:
+        '200':
+          description: Success. Details for a given verification item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationItem'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      summary: Details for a given verification item
+      description: |
+        Details for a given verification item
+      tags:
+        - Verification and Validation
+      parameters:
+        - $ref: '#/components/parameters/vi_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationItem'
+        required: true            
+      responses:
+        '200':
+          description: Success. Updated a verification item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationItem'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    delete:
+      summary: Delete a given verification item
+      description: |
+        Delete for a given verification item
+      tags:
+        - Verification and Validation
+      parameters:
+        - $ref: '#/components/parameters/vi_id'
+      responses:
+        '204':
+          description: Success. VI Deleted 
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                
+  /vnv/vis/bulk_query:
+    post:
+      summary: Query of vis based on VI ids
+      description: >
+        Verification items. Post is used instead of Get since we need to pass
+        many vi ids in request body.
+
+        Returns up to 10000 VIs.
+      tags:
+        - Verification and Validation
+        - Bulk Query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        description: VI ids
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationItem'
+        '401':
+          description: Unauthorized (no valid credential was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden (insufficient permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /health:
+    get:
+      tags:
+        - Health
+      operationId: health_get
+      responses:
+        '200':
+          description: Received service status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+servers:
+  - url: /api/v4
+components:
+  parameters:
+    dictionary_version:
+      name: dictionary_version
+      in: path
+      description: Version of the specific dictionary type (unique within types)
+      required: true
+      schema:
+        type: string
+    dictionary_type:
+      name: dictionary_type
+      in: path
+      description: Type of Dictionary (sse/flight)
+      required: true
+      schema:
+        type: string
+        enum:
+          - sse
+          - flight
+    cmd_stem:
+      name: cmd_stem
+      in: path
+      description: The Command Stem to return the details for
+      required: true
+      schema:
+        type: string
+    evr_name:
+      name: evr_name
+      in: path
+      description: The name of the EVR to return
+      required: true
+      schema:
+        type: string
+    channel_name:
+      name: channel_name
+      in: path
+      description: The name of the EHA to return
+      required: true
+      schema:
+        type: string
+    script_name:
+      name: script_name
+      in: path
+      description: The name of custom script
+      required: true
+      schema:
+        type: string
+    script_id:
+      name: script_id
+      in: path
+      description: >-
+        Unique id of the script. This should be a hash of script_path (for
+        example SHA256).
+      required: true
+      schema:
+        type: string
+    mil1553_name:
+      name: mil1553_name
+      in: path
+      description: The name of the mil1553 variable to return
+      required: true
+      schema:
+        type: string
+    vac_id:
+      name: vac_id
+      in: path
+      description: The unique id of a verification activity group.
+      required: true
+      schema:
+        type: string
+    va_id:
+      name: va_id
+      in: path
+      description: The unique id of a verification activity
+      required: true
+      schema:
+        type: string
+    vi_id:
+      name: vi_id
+      in: path
+      description: The unique id of a verification item
+      required: true
+      schema:
+        type: string
+    sort:
+      name: sort
+      in: query
+      description: Orders the results by element name (alphabetic -ascending/descending)
+      schema:
+        type: string
+        enum:
+          - ASC
+          - DESC
+    limit:
+      name: limit
+      in: query
+      description: Limit on the number of returned results
+      schema:
+        type: integer
+        default: 20
+    offset:
+      name: offset
+      in: query
+      description: Offset for pagination
+      schema:
+        type: integer
+    wild:
+      name: wild
+      in: query
+      description: >
+        Modifies search fields to use search optimized (true) vs. typeahead
+        optimized (false)
+      schema:
+        type: boolean
+        default: false
+    step_source:
+      name: step_source
+      in: path
+      description: If the source is built-in or custom script
+      required: true
+      schema:
+        type: string
+        enum:
+          - BUILT_IN
+          - CUSTOM_SCRIPT
+    step_type:
+      name: step_type
+      in: path
+      description: Type of built in step
+      required: true
+      schema:
+        $ref: '#/components/schemas/BuiltInStepType'    
+
+  securitySchemes:
+    UserSecurity:
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    Dictionary:
+      type: object
+      properties:
+        creation_date:
+          description: The date the dictionary version was created in Ingenium
+          type: string
+        dictionary_version:
+          description: Dictionary Version (must be unique per dictionary type)
+          type: string
+        dictionary_type:
+          description: Type of Dictionary (sse/flight)
+          type: string
+          enum:
+            - sse
+            - flight
+        dictionary_description:
+          description: Description of the dictionary
+          type: string
+        state:
+          description: State of the dictionary version
+          type: string
+          enum:
+            - NOT_PUBLISHED
+            - PUBLISHED
+            - RETIRED
+            - RELEASED
+    EVR:
+      type: object
+      properties:
+        evr_name:
+          description: The name of the EVR
+          type: string
+        evr_id:
+          description: The id of the EVR (format in hex)
+          type: string
+        operations_category:
+          description: The operations category of the channel.
+          type: string
+        evr_description:
+          description: Description of the evr (note this is not always populated)
+          type: string
+        evr_message:
+          description: EVR display message
+          type: string
+        evr_level:
+          description: Level of the EVR
+          type: string
+    Command:
+      type: object
+      properties:
+        command_stem:
+          description: The commmand stem (or mneumonic)
+          type: string
+        operations_category:
+          description: The operations category of the command.
+          type: string
+        cmd_description:
+          description: Description of the command.
+          type: string
+        restricted_modes:
+          description: List of Restricted Modes for this Command
+          type: array
+          items:
+            type: string
+        cmd_type:
+          description: If you the project uses different command types (e.g. HW vs. FSW vs. SIM)
+          type: string
+        repeat_min:
+          description: >-
+            If there is a repeat argument the minimum number of times the repeat
+            set must be present (ignore if no repeat args)
+          type: integer
+        repeat_max:
+          description: >-
+            If there is a repeat argument the maximum number of times the repeat
+            set must be present (ignore if no repeat args)
+          type: integer
+        arguments:
+          description: >-
+            Array of arguments. Note that the position of the arguments is
+            important to maintain.
+          type: array
+          items:
+            $ref: '#/components/schemas/Argument'
+    Argument:
+      type: object
+      description: Definition of a single Flight command arguments
+      properties:
+        argument_type:
+          description: Type of the argument
+          type: string
+          enum:
+            - INT
+            - UINT
+            - STRING
+            - FLOAT
+            - BOOL
+            - TIME
+            - ENUM
+            - ROL
+        argument_size:
+          description: Size of the argument
+          type: integer
+        argument_description:
+          description: Description of the argument (if available)
+          type: string
+        repeat_arg:
+          description: >
+            A repeat argument (repeat args can be repeated in the order they are
+            in multiple times)
+
+            Note that the term "repeat set" refers to all the of repeat args
+            defined for a command in the order they are defined in.
+          type: string
+          enum:
+            - 'Yes'
+            - 'No'
+        allowable_ranges:
+          description: Array of allowable ranges (if not present - everything is allowed)
+          type: array
+          items:
+            $ref: '#/components/schemas/AllowableRange'
+        enumerations:
+          description: Used if the argument_type is ENUM
+          type: array
+          items:
+            $ref: '#/components/schemas/Enumerations'
+    Channel:
+      type: object
+      properties:
+        channel_name:
+          description: The name of the channel
+          type: string
+        channel_id:
+          description: The id of the channel
+          type: string
+        operations_category:
+          description: The operations category of the channel.
+          type: string
+        description:
+          description: Description of the eha channel.
+          type: string
+        derived:
+          description: Limits the query on whether the channel is ground derived.
+          type: string
+          enum:
+            - 'Yes'
+            - 'No'
+        eu_present:
+          description: Indicates if an engineering unit value is defined for the channel.
+          type: string
+          enum:
+            - 'Yes'
+            - 'No'
+        type:
+          type: string
+          enum:
+            - integer
+            - unsigned
+            - string
+            - float
+            - boolean
+            - time
+            - enum
+        bit_size:
+          type: integer
+        enumerations:
+          description: Used if the type is ENUM
+          type: array
+          items:
+            $ref: '#/components/schemas/Enumerations'
+    Enumerations:
+      type: object
+      properties:
+        symbol:
+          description: Display value of the enumeration
+          type: string
+        numeric:
+          description: Numeric value of the enumeration
+          type: integer
+    AllowableRange:
+      type: object
+      properties:
+        min_value:
+          description: Minimum Value for the Range
+          type: string
+        max_value:
+          description: Maximum Value for the Range
+          type: string
+    CustomScript:
+      type: object
+      properties:
+        script_name:
+          description: The script name
+          type: string
+        script_id:
+          description: The script unique id (SHA256 hash of path)
+          type: string
+        is_command:
+          description: Whether this custom script is considers a "command" for automatic execution
+          type: boolean
+        script_path:
+          description: Relative path to custom script
+          type: string
+        description:
+          description: Description of the script
+          type: string
+        hash:
+          description: SHA 256 hash of the script
+          type: string
+        status:
+          description: Whether the script is available for active use or not.
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        inputs:
+          description: Array of script inputs.
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptInput'
+        entries:
+          description: input and output fields of entry
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptEntry'
+        outputs:
+          description: array of output
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptOutput'
+        output_array:
+          $ref: '#/components/schemas/ScriptOutputArray'
+        layout:
+          description: Adds advanced layout options to the custom script
+          type: array
+          items:
+            $ref: '#/components/schemas/SectionLayout'
+    SectionLayout:
+      type: object
+      properties:
+        entry:
+          type: string
+          enum:
+            - 'TRUE'
+            - 'FALSE'
+          description: |
+            This indicates if the section is an entry and can repeat multiple times. There can only
+            be one entry per custom script.
+        header:
+          $ref: '#/components/schemas/HeaderLayout'
+        content:
+          $ref: '#/components/schemas/ContentLayout'
+        results:
+          $ref: '#/components/schemas/ResultsLayout'
+    HeaderLayout:
+      type: object
+      properties:
+        headerlayout:
+          type: array
+          description: |
+            A Header is visible at L2 and can contain individual fields, displays, and icons.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/LayoutDisplay'
+              - $ref: '#/components/schemas/InputLayoutField'
+              - $ref: '#/components/schemas/OutputLayoutField'              
+              - $ref: '#/components/schemas/Icon'
+    ContentLayout:
+      type: object
+      properties:
+        contentlayout:
+          type: array
+          description: |
+            Content is visible at L3 and contain individual fields, displays, icons, and Images
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/LayoutDisplay'
+              - $ref: '#/components/schemas/InputLayoutField'
+              - $ref: '#/components/schemas/OutputLayoutField'     
+              - $ref: '#/components/schemas/Icon'
+              - $ref: '#/components/schemas/ImageLayout'
+    ResultsLayout:
+      type: object
+      properties:
+        resultslayout:
+          type: array
+          description: |
+            Results are visibile at L2 and can contain all outputs.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/LayoutDisplay'
+              - $ref: '#/components/schemas/OutputLayoutField'    
+              - $ref: '#/components/schemas/Icon'
+              - $ref: '#/components/schemas/ImageLayout'
+              - $ref: '#/components/schemas/TableLayout'
+              - $ref: '#/components/schemas/SeriesLayout'
+    SeriesLayout:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'SERIES'
+        field_name:
+          type: string
+          description: The variable to display (must match an series output field defined)
+        label:
+          $ref: '#/components/schemas/Label'
+        layout:
+          $ref: '#/components/schemas/Layout'
+    LayoutDisplay:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'DISPLAY'      
+        template:
+          $ref: '#/components/schemas/Template'
+        mouseover:
+          $ref: '#/components/schemas/Mouseover'              
+        layout:
+          $ref: '#/components/schemas/Layout'
+    
+    InputLayoutField:
+      type: object
+      properties:
+        allOf:
+          $ref: '#/components/schemas/LayoutField'
+    OutputLayoutField:
+      type: object
+      properties:
+        allOf:
+          $ref: '#/components/schemas/LayoutField'
+      
+    LayoutField:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'FIELD'
+        field_name:
+          type: string
+          description: The variable to input/display (must match a field defined in custom script)
+        label:
+          $ref: '#/components/schemas/Label'
+        tool_tip:
+          type: string
+          description: Optional hover text to display input assistence / help
+        layout:
+          $ref: '#/components/schemas/Layout'        
+    Icon:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'ICON'
+        icon_type: 
+          type: string
+          description: |
+            Icon Type Status maps to step or entry pass/fail/error status (check/X)
+            Icon Type Details is an "eye icon" 
+          enum:
+           - 'STATUS'
+           - 'DETAILS'
+        mouseover:
+          $ref: '#/components/schemas/Mouseover'        
+        layout:
+          $ref: '#/components/schemas/Layout'        
+    Mouseover:
+      type: object
+      properties:
+        mouseover_elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/MouseoverElement'
+    MouseoverElement:
+      type: object
+      properties:
+        field_name:
+          type: string
+          description: The variable to display. Must match a field (I/O) defined in custom script.
+        display_name:
+          type: string
+          description: |
+            The more human readable lable or display name for the field. If not provided the field name will be used.
+    ImageLayout:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'IMAGE'      
+        field_name:
+          type: string
+          description: The variable to display (must match an image output field defined)
+        label:
+          $ref: '#/components/schemas/Label'
+        layout:
+          $ref: '#/components/schemas/Layout'     
+    TableLayout:
+      type: object
+      properties:
+        layout_type:
+          type: string
+          enum:
+            - 'TABLE'      
+        table_name:
+          type: string
+          description: Table to display (needs to correspond with a output_array_field field)
+        label:
+          $ref: '#/components/schemas/Label'
+        row_height:
+          description: The height of each row
+          type: integer
+        mouseover:
+          $ref: '#/components/schemas/Mouseover'
+        table_column:
+          type: array
+          description: Defines the table columns and the format of the data within the columns
+          items:
+            $ref: '#/components/schemas/TableColumn'
+    TableColumn:
+      type: object
+      properties:
+        width:
+          type: integer
+          description: |
+            Nominal width of the field in the table (starting at 1 max of 12)
+            This is expressed as "columns" or increments of 1/12 of available screen widths
+          minimum: 1
+          maximum: 12          
+        column_label:
+          type: string
+          description: The Column header definition
+        template:
+          $ref: '#/components/schemas/Template'
+    Template:
+      type: object
+      properties:
+        template:
+          type: string
+          description: | 
+            A formatted string using python style f"" formating where the variables are output fields 
+            (E.g. "The {criminals} were no match for {superhero}")
+    Layout:
+      type: object
+      properties:
+        row:
+          type: integer
+          description: Veritical position of the field in the UI, expressed as "rows" (starting at 1) 
+        column:
+          type: integer
+          description: Horizontal position of the field in the UI, expressed as "columns" (starting at 1 max of 12)
+          minimum: 1
+          maximum: 12
+        width:
+          type: integer
+          description:  Nominal width of a field expressed as "columns" or increments of 1/12 of available screen widths
+          minimum: 1
+          maximum: 12
+        height:
+          type: integer
+          description: Nominal height of a field (in rows)
+        align:
+          type: string
+          description: Alignment (within column)
+          enum:
+           - 'LEFT'
+           - 'RIGHT'
+           - 'CENTER'
+    Label:
+      type: object
+      properties:
+        label_content:
+          type: string
+          description: The content of the label
+        label_loc:
+          type: string
+          description: Where the label is placed relative to the content
+          enum:
+           - 'LEFT'
+           - 'RIGHT'
+           - 'TOP'
+           - 'BOTTOM'
+        label_align:
+          type: string
+          description: How the label is aligned in its location relative to its content
+          enum:
+           - 'LEFT'
+           - 'RIGHT'
+           - 'CENTER'        
+    ScriptInput:
+      type: object
+      description: Definition of a single custom script input
+      properties:
+        name:
+          description: The name of the input (the "key")
+          type: string
+        description:
+          description: Description of the input field
+          type: string
+        phase:
+          description: >
+            Whether the script input is an authoring or execution phase input.
+            Execution phase inputs are entered manually during execution.
+            Authoring phase inputs are developed ahead of time and are under CM.
+          type: string
+          enum:
+            - AUTHORING
+            - EXECUTION
+        input_required:
+          description: Whether the input is required or optional
+          type: string
+          enum:
+            - 'YES'
+            - 'NO'
+        type:
+          description: >
+            Type of the argument. Note that that there are special "Ingenium
+            types" which will cause Ingenium to accept multiple formats and or
+            do variable substitution. 
+          type: string
+          enum:
+            - INT
+            - STRING
+            - FLOAT
+            - ENUM
+            - DATA_PATH
+            - TIME
+            - BOOL
+            - FLIGHT_COMMAND
+            - SIM_COMMAND
+            - FLIGHT_EVR
+            - FLIGHT_TELEM
+            - SIM_EVR
+            - SIM_TELEM
+            - VERIFICATION_COND
+        enumerations:
+          description: Used if the argument_type is ENUM
+          type: array
+          items:
+            $ref: '#/components/schemas/Enumerations'
+        default_value:
+          description: >
+            This value will be used to pre-populate the input field, if
+            provided. 
+          type: string
+    ScriptEntry:
+      type: object
+      description: Definition of a group of inputs and outputs (with a pass/fail status)
+      properties:
+        display_field:
+          description: >-
+            The name of an output field that will be displayed as the primary
+            results
+          type: string
+        entry_inputs:
+          description: Input fields for the entry
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptInput'
+        entry_outputs:
+          description: Output fields for the entry
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptOutput'
+        entry_output_array:
+          $ref: '#/components/schemas/ScriptOutputArray'
+    Mil1553Details:
+      type: object
+      properties:
+        mil1553_name:
+          description: Variable name of the 1553 measurement
+          type: string
+        description:
+          description: Description of the 1553 variable
+          type: string
+        operations_category:
+          description: The operations category of the 1553 variable.
+          type: string
+        output_type:
+          description: Type of the variable
+          type: string
+          enum:
+            - INT
+            - UINT
+            - BIN
+            - FLOAT
+            - HEX
+        sub_address:
+          description: The sub-address for the 1553 variable
+          type: integer
+        remote_terminal:
+          description: The remote terminal for the 1553 variable
+          type: integer
+        transmit_receive:
+          description: Whether the 1553 variable is for Transmitting or Receiving
+          type: string
+          enum:
+            - TRANSMIT
+            - RECEIVE
+        eu_present:
+          description: Indicates if an engineering unit value is defined for the channel.
+          type: string
+          enum:
+            - 'Yes'
+            - 'No'
+        enumerations:
+          description: Used if the argument_type is ENUM
+          type: array
+          items:
+            $ref: '#/components/schemas/Enumerations'
+    ScriptOutputArray:
+      type: object
+      description: Definition of an array of outputs that can be repeated
+      properties:
+        name:
+          description: The name of the output array (the "key")
+          type: string
+        description:
+          description: Description of the output array
+          type: string
+        max_entries:
+          description: Maximum number of entries (Should not exceed ~10)
+          type: integer
+        outputs:
+          description: Array of ScriptOutputArrayFields
+          type: array
+          items:
+            $ref: '#/components/schemas/ScriptOutputArrayField'
+    ScriptOutput:
+      type: object
+      description: Definition of a single custom script output
+      properties:
+        name:
+          description: The name of the output (the "key")
+          type: string
+        description:
+          description: Description of the output field
+          type: string
+        type:
+          description: Type of the argument
+          type: string
+          enum:
+            - INT
+            - STRING
+            - FLOAT
+            - FILE
+            - IMAGE
+            - SERIES
+    ScriptOutputArrayField:
+      type: object
+      description: Definition of a single custom script output
+      properties:
+        name:
+          description: The name of the output (the "key")
+          type: string
+        description:
+          description: Description of the output field
+          type: string
+        visible:
+          description: >-
+            Whether the field is displayed in the array table or in the mouse
+            over details
+          type: string
+          enum:
+            - 'YES'
+            - 'NO'
+        type:
+          description: Type of the argument
+          type: string
+          enum:
+            - INT
+            - STRING
+            - FLOAT
+    VerificationItem:
+      type: object
+      properties:
+        vi_id:
+          description: >-
+            Unique ID for the Verification Item (User generated, will enforce
+            format via xml schema)
+          type: string
+        vi_name:
+          description: >-
+            Unique Name for the Verification Item (Requirement short text,
+            channel name, etc)
+          type: string
+        vi_owner:
+          description: Owner of this requirement
+          type: string
+        vi_type:
+          description: >-
+            Type of Verification Item. Not constained but expected to be
+            REQUIREMENT, CHANNEL, COMMAND, etc.
+          type: string
+        vi_text:
+          description: >-
+            Text of the verification item. Could be requirement text,
+            command/channel description, etc.
+          type: string
+        vas:
+          type: array
+          description: List of Verification Activity associated with the Verification Item
+          items:
+            type: string
+        vacs:
+          type: array
+          description: List of Verification Activity associated with the Verification Item
+          items:
+            type: string          
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Current status of service
+          enum:
+            - OK
+            - ERROR
+            - UNKNOWN
+    ErrorModel:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    PaletteBuiltInStep:
+      type: object
+      properties:
+        step_type:
+          type: string
+          description: The Ingenium built in type
+          enum:
+            - MANUAL_INPUT
+            - MANUAL_EIP
+            - VENUE_CONFIG_MANUAL
+            - ENVIRONMENT_MANUAL
+            - GDS_MANUAL
+            - QUERY_EVR
+            - VERIFY_EHA     
+            - WAIT_EHA
+            - BUS_1553
+            - WAIT_EVR
+            - LIST_DATA_PRODUCTS
+            - WAIT_DATA_PRODUCTS
+            - CMD
+            - CMD_FILE
+            - CMD_SCMF     
+            - CMD_SSE  
+            - MANUAL_VERIFICATION
+            - CUSTOM_SCRIPT
+            - WAIT  
+            - TIME_REFERENCE
+        step_display_name:
+          type: string
+          description: The display name for a given step
+        palette_catagory:
+          type: string
+          description: The catagory or header for the step (e.g. Telemetry)
+        enable_disable:
+          type: string
+          description: Whether the step is enabled in the palette (used primarily for builtins which can't be deleted)
+          enum:
+            - ENABLE
+            - DISABLE
+    PaletteBuiltInStepPatch:
+      type: object
+      properties:
+        step_display_name:
+          type: string
+          description: The display name for a given step
+        palette_catagory:
+          type: string
+          description: The catagory or header for the step (e.g. Telemetry)
+        enable_disable:
+          type: string
+          description: Whether the step is enabled in the palette (used primarily for builtins which can't be deleted)
+          enum:
+            - ENABLE
+            - DISABLE               
+    PaletteCustomStep:
+      type: object
+      required:
+        - step_id
+      properties:
+        step_id:
+          type: string
+          description: The custom script id (or built in hardcoded id)
+        step_display_name:
+          type: string
+          description: The display name for a given step
+        palette_catagory:
+          type: string
+          description: The catagory or header for the step (e.g. Telemetry)
+    PaletteCustomStepPatch:
+      type: object
+      properties:
+        step_display_name:
+          type: string
+          description: The display name for a given step
+        palette_catagory:
+          type: string
+          description: The catagory or header for the step (e.g. Telemetry)
+    BuiltInStepType:
+      type: object
+      properties:
+        step_type:
+          type: string
+          enum:
+            - MANUAL_INPUT
+            - MANUAL_EIP
+            - VENUE_CONFIG_MANUAL
+            - ENVIRONMENT_MANUAL
+            - GDS_MANUAL
+            - QUERY_EVR
+            - VERIFY_EHA     
+            - WAIT_EHA
+            - BUS_1553
+            - WAIT_EVR
+            - LIST_DATA_PRODUCTS
+            - WAIT_DATA_PRODUCTS
+            - CMD
+            - CMD_FILE
+            - CMD_SCMF     
+            - CMD_SSE  
+            - MANUAL_VERIFICATION
+            - CUSTOM_SCRIPT
+            - WAIT  
+            - TIME_REFERENCE
